@@ -2,6 +2,9 @@
 #define Calculator_Ast_h
 
 #include <memory>
+#include <limits>
+#include <stdexcept>
+#include <cmath>
 
 class ExprNode {
 public: 
@@ -30,8 +33,12 @@ public:
             case '+': return lval + rval;
             case '-': return lval - rval;
             case '*': return lval * rval;
-            case '/': return lval / rval; // todo : division by zero check
-            default : return 0.0; // unknown type
+            case '/': 
+                if(std::abs(rval) < std::numeric_limits<double>::epsilon())
+                    throw std::runtime_error("Division by zero");
+                return lval / rval;
+            default : 
+                throw std::runtime_error("Unknown operator: " + std::string(1, op_));
         }
     }
 };

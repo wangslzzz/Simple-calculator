@@ -1,5 +1,6 @@
 #include "calculator/Tokenizer.h"
 #include <cctype>
+#include <stdexcept>
 
 Tokenizer::Tokenizer(const std::string &input) : input_(input) {}
 
@@ -36,8 +37,7 @@ std::vector<Token> Tokenizer::tokenize() {
             consume();
             tokens.emplace_back(TokenType::RightParen, ")");
         }else {
-            // unknown type
-            consume();
+            throw std::runtime_error("Unknown character: '" + std::string(1, current) + "'");
         }
     }
     tokens.emplace_back(TokenType::End);

@@ -16,8 +16,7 @@ int main() {
 
         try {
             Tokenizer t(input);
-            auto tokens = t.tokenize();
-            Parser p(tokens);
+            Parser p(t.tokenize());
             auto ast = p.parse();
             double result = ast->evaluate();
             std::cout << "= " << result << std::endl;

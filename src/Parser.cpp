@@ -64,5 +64,11 @@ std::unique_ptr<ExprNode> Parser::factor() {
 }
 
 std::unique_ptr<ExprNode> Parser::parse() {
-    return expression();
+    auto expr = expression();
+
+    if (!isAtEnd()) {
+        throw std::runtime_error("Unexpected token: " + peek().value);
+    }
+
+    return expr;
 }
