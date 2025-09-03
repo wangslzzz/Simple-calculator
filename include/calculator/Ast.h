@@ -5,18 +5,43 @@
 #include <limits>
 #include <stdexcept>
 #include <cmath>
+#include "calculator/Environment.h"
 
 class ExprNode {
 public: 
     virtual ~ExprNode() = default;
-    virtual double evaluate() const = 0;
+    virtual double evaluate(Environment& env) const = 0;
+};
+
+class VariableNode : public ExprNode {
+    std::string name_;
+public:
+    explicit VariableNode(const std::string& name) : name_(name) {}
+    double evaluate(Environment& env) const override {
+        return env.get(name_);
+    }
 };
 
 class NumberNode : public ExprNode {
     double value_;
 public:
-    explicit NumberNode(double value) : value_(value) {}
-    double evaluate() const override {return value_;}
+    explicit NumberNode(const double value) : value_(value) {}
+    double evaluate(Environment& env) const override {
+        return value_;
+    }
+};
+
+class AssignmentNode : public ExprNode{
+    std::string name_;
+    std::unique_ptr<ExprNode> value_;
+public:
+    explicit AssignmentNode(const std::string& name, std::unique_ptr<ExprNode> value) :
+        name_(name), value_(std::move(value)) {}
+    double evaluate(Environment& env) const override {
+        double value = value_->evaluate(env);
+        env.assign(name_, value);
+        return value;
+    }
 };
 
 class UnaryOpNode : public ExprNode {
@@ -25,8 +50,8 @@ class UnaryOpNode : public ExprNode {
 public:
     UnaryOpNode(char op, std::unique_ptr<ExprNode> operand) :
         op_(op), operand_(std::move(operand)) {}
-    double evaluate() const override {
-        double rval = operand_->evaluate();
+    double evaluate(Environment& env) const override {
+        double rval = operand_->evaluate(env);
         switch(op_) {
             case '+': return rval;
             case '-': return -rval;
@@ -43,9 +68,9 @@ class BinaryOpNode : public ExprNode {
 public:
     BinaryOpNode(char op, std::unique_ptr<ExprNode> left, std::unique_ptr<ExprNode> right) :
         op_(op), left_(std::move(left)), right_(std::move(right)) {}
-    double evaluate() const override {
-        double lval = left_->evaluate();
-        double rval = right_->evaluate();
+    double evaluate(Environment& env) const override {
+        double lval = left_->evaluate(env);
+        double rval = right_->evaluate(env);
         switch(op_) {
             case '+': return lval + rval;
             case '-': return lval - rval;

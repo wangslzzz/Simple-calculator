@@ -8,8 +8,10 @@ std::string tokenTypeToString(TokenType type) {
     switch(type) {
         case TokenType::Number: return "Number";
         case TokenType::Operator: return "Operator";
+        case TokenType::Assign: return "Assign";
         case TokenType::LeftParen: return "LeftParen";
         case TokenType::RightParen: return "RightParen";
+        case TokenType::Identifier: return "Identifier";
         case TokenType::End: return "End";
         default: return "Unknown";
     }
@@ -21,7 +23,9 @@ bool testTokenizer() {
     std::cout << "\n===Testing Tokenizer===\n";
 
     std::vector<std::string> testCases = {
-        "(1 + 23.5) * 4 - 5",
+        "x = (1 + 23.5) * 4 - 5",
+        "-2 * --4",
+        "x12"
     };
 
     for(const auto& input : testCases) {
@@ -40,6 +44,7 @@ bool testTokenizer() {
 
     std::vector<std::string> errorCases = {
         "1 & 2",
+        "2x"
     };
 
     for(const auto& errorInput : errorCases) {
@@ -67,18 +72,33 @@ bool testParser() {
         {"1 + 2 * 3", 7},
         {"(1 + 2) * 3", 9},
         {"10 / 2 - 1", 4},
-        {"2 * (3 + 4) / 2", 7},
         {"(1 + 2) * 3 - 4 / 2", 7},
         {"3.14 * 2", 6.28},
-        {"((1 + ((1 + 1)) * (3 - 1)))", 5}
+        {"((1 + ((1 + 1)) * (3 - 1)))", 5},
+        {"-2 * --4", -8},
+        {"x = 5", 5},
+        {"x", 5},
+        {"y = x1 = x + 1", 6},
+        {"x = y * x1 - x", 31},
+        {"y", 6},
+        {"(x + y) * 2", 74},
+        {"very_long_name = 42", 42},
+        {"x = 3 / y + 1", 1.5},
+        {"x = (y = 1) + (y = 10)", 11},
+        {"x", 11},
+        {"y", 10},
+        {"a = (b = 5) * (c = 2)", 10},
+        {"(a = 5) + (b = 10)", 15},
     };
+
+    Environment env;
 
     for(const auto& input : testCases) {
         try {
             Tokenizer t(input.first);
             Parser p(t.tokenize());
             auto ast = p.parse();
-            double result = ast->evaluate();
+            double result = ast->evaluate(env);
             assert(result == input.second);
             std::cout << "[PASS] " << input.first << " = " << result << std::endl;
         } catch(const std::exception& e) {
@@ -87,12 +107,21 @@ bool testParser() {
         }
     }
 
+    Environment errorenv;
+
     std::vector<std::string> errorCases = {
         "1 + ",
         "* 5",
         "1 + 2)",
         "1 / 0",
         "1 & 2",
+        "-1 +* 2",
+        "1 = 2",
+        "(x = 3) = 4",
+        "x + 1 = 2",
+        "y == x",
+        "y += x",
+        "x = 2 + z",
     };
 
     for (const auto& errorInput : errorCases) {
@@ -100,7 +129,7 @@ bool testParser() {
             Tokenizer t(errorInput);
             Parser p(t.tokenize());
             auto ast = p.parse();
-            double result = ast->evaluate();
+            double result = ast->evaluate(errorenv);
             std::cerr << "[FAIL] " << errorInput << " should have thrown but got: " << result << std::endl;
             AllPassed = false;
         } catch (const std::exception& e) {

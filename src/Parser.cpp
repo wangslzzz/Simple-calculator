@@ -1,5 +1,5 @@
-#include "calculator/Parser.h"
 #include <stdexcept>
+#include "calculator/Parser.h"
 
 Parser::Parser(const std::vector<Token> tokens) : tokens_(tokens) {}
 
@@ -8,8 +8,9 @@ const Token& Parser::peek() const {
 }
 
 const Token& Parser::consume() {
-   if(!isAtEnd()) current_++;
-   return tokens_[current_ - 1];
+   if(isAtEnd())    
+        throw std::runtime_error("Unexpected end of input");
+   return tokens_[current_++];
 }
 
 bool Parser::match(TokenType type) const {
@@ -18,6 +19,18 @@ bool Parser::match(TokenType type) const {
 
 bool Parser::isAtEnd() const {
     return peek().type == TokenType::End;
+}
+
+std::unique_ptr<ExprNode> Parser::assignment() {
+    if(match(TokenType::Identifier) && 
+        current_ + 1 < tokens_.size() && tokens_[current_ + 1].type == TokenType::Assign) {
+        
+        std::string varName = consume().value;
+        consume();
+        auto value = assignment();
+        return std::make_unique<AssignmentNode>(varName, std::move(value));
+    }
+    return expression();
 }
 
 std::unique_ptr<ExprNode> Parser::expression() {
@@ -52,9 +65,14 @@ std::unique_ptr<ExprNode> Parser::factor() {
         return std::make_unique<NumberNode>(value);
     }
 
+    if(match(TokenType::Identifier)) {
+        std::string varName = consume().value;
+        return std::make_unique<VariableNode>(varName);
+    }
+
     if(match(TokenType::LeftParen)) {
         consume();
-        auto expr = expression();
+        auto expr = assignment();
         if (!match(TokenType::RightParen)) {
             throw std::runtime_error("Expect ')' after expression.");
         }
@@ -62,11 +80,12 @@ std::unique_ptr<ExprNode> Parser::factor() {
         return expr;
     }
 
-    throw std::runtime_error("Unexpected token.");
+    throw std::runtime_error("Unexpected token: " + peek().value + 
+        " (expected number, identifier, or expression)");
 }
 
 std::unique_ptr<ExprNode> Parser::parse() {
-    auto expr = expression();
+    auto expr = assignment();
 
     if (!isAtEnd()) {
         throw std::runtime_error("Unexpected token: " + peek().value);

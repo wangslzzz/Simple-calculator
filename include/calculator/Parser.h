@@ -18,6 +18,7 @@ private:
     std::unique_ptr<ExprNode> expression();
     std::unique_ptr<ExprNode> term();
     std::unique_ptr<ExprNode> factor();
+    std::unique_ptr<ExprNode> assignment();
 
 public:
     std::unique_ptr<ExprNode> parse();

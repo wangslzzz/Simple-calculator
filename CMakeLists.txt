@@ -18,9 +18,9 @@ target_include_directories(calculator_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/include
 )
 
-add_executable(calculator_cmd src/main.cpp)
+add_executable(calculator src/main.cpp)
 
-target_link_libraries(calculator_cmd PRIVATE calculator_lib)
+target_link_libraries(calculator PRIVATE calculator_lib)
 
 enable_testing()
 add_subdirectory(test)

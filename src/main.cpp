@@ -4,7 +4,8 @@
 #include "calculator/Parser.h"
 
 int main() {
-    std::cout << "Simple calculator (type 'quit' to exit)" << std::endl;
+    std::cout << "Simple calculator with variables (type 'quit' to exit)" << std::endl;
+    Environment env;
 
     while(true) {
         std::cout << "> ";
@@ -18,7 +19,7 @@ int main() {
             Tokenizer t(input);
             Parser p(t.tokenize());
             auto ast = p.parse();
-            double result = ast->evaluate();
+            double result = ast->evaluate(env);
             std::cout << "= " << result << std::endl;
         } catch(std::exception& e) {
             std::cerr << "Error: " << e.what() << std::endl;

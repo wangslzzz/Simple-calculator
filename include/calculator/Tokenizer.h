@@ -7,8 +7,10 @@
 enum class TokenType {
     Number,
     Operator,
+    Assign,
     LeftParen,
     RightParen,
+    Identifier,
     End
 };
 
