@@ -16,10 +16,6 @@ bool Parser::match(TokenType type) const {
     return !isAtEnd() && peek().type == type;
 }
 
-bool Parser::check(TokenType type) const {
-    return !isAtEnd() && peek().type == type;
-}
-
 bool Parser::isAtEnd() const {
     return peek().type == TokenType::End;
 }
@@ -45,6 +41,12 @@ std::unique_ptr<ExprNode> Parser::term() {
 }
 
 std::unique_ptr<ExprNode> Parser::factor() {
+    if(match(TokenType::Operator) && (peek().value == "+" || peek().value == "-")) {
+        std::string op = consume().value;
+        auto operand = factor();
+        return std::make_unique<UnaryOpNode>(op[0], std::move(operand));
+    }
+
     if(match(TokenType::Number)) {
         double value = std::stod(consume().value);
         return std::make_unique<NumberNode>(value);

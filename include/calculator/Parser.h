@@ -13,7 +13,6 @@ private:
     const Token& peek() const;
     const Token& consume();
     bool match(TokenType type) const;
-    bool check(TokenType type) const;
     bool isAtEnd() const;
 
     std::unique_ptr<ExprNode> expression();

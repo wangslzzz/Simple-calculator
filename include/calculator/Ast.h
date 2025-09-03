@@ -19,6 +19,23 @@ public:
     double evaluate() const override {return value_;}
 };
 
+class UnaryOpNode : public ExprNode {
+    char op_;
+    std::unique_ptr<ExprNode> operand_;
+public:
+    UnaryOpNode(char op, std::unique_ptr<ExprNode> operand) :
+        op_(op), operand_(std::move(operand)) {}
+    double evaluate() const override {
+        double rval = operand_->evaluate();
+        switch(op_) {
+            case '+': return rval;
+            case '-': return -rval;
+            default: 
+                throw std::runtime_error("Unknown unary operator: " + std::string(1, op_));
+        }
+    }
+};
+
 class BinaryOpNode : public ExprNode {
     char op_;
     std::unique_ptr<ExprNode> left_;
@@ -38,7 +55,7 @@ public:
                     throw std::runtime_error("Division by zero");
                 return lval / rval;
             default : 
-                throw std::runtime_error("Unknown operator: " + std::string(1, op_));
+                throw std::runtime_error("Unknown binary operator: " + std::string(1, op_));
         }
     }
 };
